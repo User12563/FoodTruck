@@ -24,14 +24,18 @@ a{
     margin: auto;
 }
 
-.home{
+.home {
     background-image: url("https://i.ibb.co/GRL1FCS/www-reallygreatsite-com.png");
     background-size: cover;
     background-repeat: no-repeat;
     width: 100vw;
     height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-
 .img-fluid{
     max-width: 100%;
     height: auto;
