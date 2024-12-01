@@ -19,9 +19,6 @@ a{
     text-decoration: none;
 }
 
-.container{
-    width: 80%;
-    margin: auto;
 .home {
     background-image: url("https://i.postimg.cc/3rz83jqh/Restaurant.png");
     background-size: cover;
@@ -34,11 +31,11 @@ a{
     justify-content: center;
     align-items: center;
 }
-
 .img-fluid {
     max-width: 100%;
     height: auto;
 }
+
 
 @media (max-width: 768px) {
     .home {
