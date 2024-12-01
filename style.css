@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Khand');
 @import url('https://fonts.googleapis.com/css?family=Oswald');
 
-/* Styles globaux */
 html {
     scroll-behavior: smooth;
     overflow-x: hidden;
@@ -10,8 +9,8 @@ html {
 body {
     background-image: url("https://i.postimg.cc/v8V8WRFS/fundo.png");
     color: #f2f2f2;
-    margin: 0;
     padding: 0;
+    margin: 0;
     font-family: 'Khand', sans-serif;
     font-weight: lighter;
 }
@@ -20,34 +19,32 @@ a {
     text-decoration: none;
 }
 
-/* Section "home" */
 .home {
     background-image: url("https://i.postimg.cc/3rz83jqh/Restaurant.png");
     background-size: cover;
-    background-position: center;
     background-repeat: no-repeat;
     width: 100vw;
     height: 100vh;
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Images fluides */
 .img-fluid {
     max-width: 100%;
     height: auto;
 }
 
-/* Barre de navigation supérieure */
 .top-nav {
     position: absolute;
     text-align: center;
     height: 50px;
     left: 50%;
-    transform: translateX(-50%);
-    font-size: 2em;
     margin: 0;
+    font-size: 2em;
+    transform: translateX(-50%);
 }
 
 .top-nav a {
@@ -60,7 +57,12 @@ a {
     margin-top: -15px;
 }
 
-/* Navigation latérale */
+.aside-float {
+    text-align: right;
+    width: 20%;
+    padding: 15px;
+}
+
 .nav-side {
     position: sticky;
     top: 0;
@@ -78,7 +80,6 @@ a {
     padding-left: 10px;
 }
 
-/* Contenu principal */
 .items {
     width: 100%;
     padding-left: 10px;
@@ -94,6 +95,7 @@ a {
 .item {
     display: flex;
     justify-content: space-between;
+    break-inside: avoid;
     border-bottom: #f2f2f2 2px dotted;
     font-size: 1.4em;
 }
@@ -111,7 +113,6 @@ a {
     width: 100%;
 }
 
-/* En-têtes */
 .header1 {
     background-image: url("https://i.postimg.cc/pVwYPntc/prato.jpg");
     background-size: cover;
@@ -142,7 +143,6 @@ section h1 {
     background-color: rgba(37, 28, 15, 0.534);
 }
 
-/* Pied de page */
 footer {
     padding-top: 60px;
     padding-bottom: 10px;
@@ -159,24 +159,5 @@ footer img {
     height: 50px;
     padding-left: 5px;
     padding-right: 5px;
-}
-
-/* Responsiveness : Adaptabilité de l'image de fond */
-
-/* Pour petits écrans (smartphones en mode portrait) */
-@media (max-width: 768px) {
-    .home {
-        background-size: contain; /* L'image reste entièrement visible */
-        background-position: center;
-        height: 70vh; /* Ajuste la hauteur */
-    }
-}
-
-/* Pour écrans intermédiaires (tablettes) */
-@media (min-width: 768px) and (max-width: 1200px) {
-    .home {
-        background-size: cover; /* L'image remplit l'espace */
-        height: 80vh; /* Ajuste la hauteur */
-    }
 }
 
