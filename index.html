@@ -6,7 +6,6 @@
     <title>Food Trucks</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        /* Design System */
         :root {
             --couleur-fond-principal: #121212;
             --couleur-primaire: #bb86fc;
@@ -90,33 +89,6 @@
             opacity: 0.9;
         }
 
-        .login-form, .signup-form {
-            background: var(--couleur-surface);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .login-form input, .signup-form input {
-            padding: 10px;
-            margin: 10px 0;
-            width: 100%;
-            border-radius: 5px;
-        }
-
-        .login-form button, .signup-form button {
-            background: var(--degradé-principal);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            color: black;
-            cursor: pointer;
-        }
-
-        .login-form button:hover, .signup-form button:hover {
-            opacity: 0.9;
-        }
-
         .menu-item, .commande-item, .panier-item, .favori-item {
             display: flex;
             justify-content: space-between;
@@ -135,14 +107,67 @@
         .menu-item button:hover, .commande-item button:hover, .panier-item button:hover, .favori-item button:hover {
             background: var(--couleur-secondaire);
         }
+
+        /* Popup Style */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: var(--couleur-surface);
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+        }
+
+        .popup-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: var(--couleur-fond-principal);
+            color: white;
+        }
+
+        .popup-content button {
+            background: var(--degradé-principal);
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            color: black;
+            cursor: pointer;
+        }
+
+        .popup-content button:hover {
+            opacity: 0.9;
+        }
+
+        .popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
     <div class="conteneur-principal">
         <aside class="sidebar">
             <nav class="menu-navigation">
-                <div class="item-menu" data-page="login">🔑 Se connecter</div>
-                <div class="item-menu" data-page="signup">📝 S'inscrire</div>
                 <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
                 <div class="item-menu" data-page="menu">🍽️ Menu</div>
                 <div class="item-menu" data-page="panier">🛒 Panier</div>
@@ -151,39 +176,32 @@
             </nav>
         </aside>
         <main>
-            <section id="login" class="contenu-page active">
-                <h2>Se connecter</h2>
-                <div class="login-form">
-                    <input type="text" id="login-username" placeholder="Nom d'utilisateur">
-                    <input type="password" id="login-password" placeholder="Mot de passe">
-                    <button onclick="login()">Se connecter</button>
-                </div>
-            </section>
-            <section id="signup" class="contenu-page">
-                <h2>S'inscrire</h2>
-                <div class="signup-form">
-                    <input type="text" id="signup-username" placeholder="Nom d'utilisateur">
-                    <input type="password" id="signup-password" placeholder="Mot de passe">
-                    <button onclick="signup()">S'inscrire</button>
-                </div>
-            </section>
+            <!-- Page de la carte des Food Trucks -->
             <section id="carte" class="contenu-page">
                 <h2>Carte des Food Trucks</h2>
                 <div id="carte-food-trucks"></div>
             </section>
+
+            <!-- Page du menu des Food Trucks -->
             <section id="menu" class="contenu-page">
                 <h2>Menu des Food Trucks</h2>
                 <div id="menu-list"></div>
             </section>
+
+            <!-- Page du panier -->
             <section id="panier" class="contenu-page">
                 <h2>Votre Panier</h2>
                 <div id="panier-list"></div>
                 <button class="bouton" onclick="passerCommande()">Passer commande</button>
             </section>
+
+            <!-- Page des plats favoris -->
             <section id="favoris" class="contenu-page">
                 <h2>Plats Favoris</h2>
                 <div id="favoris-list"></div>
             </section>
+
+            <!-- Page des commandes -->
             <section id="commandes" class="contenu-page">
                 <h2>Historique des Commandes</h2>
                 <div id="commandes-list"></div>
@@ -191,9 +209,22 @@
         </main>
     </div>
 
+    <!-- Popup Connexion/Inscription -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <span class="close-btn" onclick="closePopup()">×</span>
+            <h2>Se connecter ou s'inscrire</h2>
+            <div class="popup-form">
+                <input type="text" id="username" placeholder="Nom d'utilisateur">
+                <input type="password" id="password" placeholder="Mot de passe">
+                <button onclick="loginOrSignup()">Se connecter / S'inscrire</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        // Données des Food Trucks
+        // Données Food Trucks (1 seul truck)
         const foodTrucks = {
             "Food Truck Courbevoie": {
                 position: [48.8997, 2.3096],
@@ -211,229 +242,74 @@
         let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
         let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
 
-        // Navigation entre pages
-        function setupNavigation() {
-            const menuItems = document.querySelectorAll('.item-menu');
-            const pages = document.querySelectorAll('.contenu-page');
-            
-            menuItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    menuItems.forEach(menu => menu.classList.remove('active'));
-                    item.classList.add('active');
-                    
-                    const targetPage = item.dataset.page;
-                    pages.forEach(page => page.classList.remove('active'));
-                    document.getElementById(targetPage).classList.add('active');
-                });
-            });
+        // Ouvrir et fermer le popup
+        function openPopup() {
+            document.getElementById('popup').style.display = 'flex';
         }
 
-        // Fonction d'inscription
-        function signup() {
-            const username = document.getElementById('signup-username').value;
-            const password = document.getElementById('signup-password').value;
-
-            if (username && password) {
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                if (users.some(user => user.username === username)) {
-                    alert("Nom d'utilisateur déjà pris.");
-                    return;
-                }
-
-                users.push({ username, password });
-                localStorage.setItem('users', JSON.stringify(users));
-                alert("Inscription réussie !");
-            } else {
-                alert("Veuillez entrer un nom d'utilisateur et un mot de passe.");
-            }
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
         }
 
-        // Fonction de connexion
-        function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
+        // Fonction de connexion/inscription
+        function loginOrSignup() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(user => user.username === username && user.password === password);
-
-            if (user) {
-                currentUser = user;
-                alert("Connexion réussie !");
-                document.getElementById('login-username').value = '';
-                document.getElementById('login-password').value = '';
-                displayMenu();
-                displayPanier();
-                displayCommandes();
-                displayFavoris();
-            } else {
-                alert("Nom d'utilisateur ou mot de passe incorrect.");
-            }
-        }
-
-        // Affichage des plats du menu
-        function displayMenu() {
-            const menuList = document.getElementById('menu-list');
-            menuList.innerHTML = '';
-
-            Object.keys(foodTrucks).forEach(truckName => {
-                const truck = foodTrucks[truckName];
-                truck.plats.forEach(plat => {
-                    const platElement = document.createElement('div');
-                    platElement.classList.add('menu-item');
-                    platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
-                    
-                    const addButton = document.createElement('button');
-                    addButton.textContent = "Ajouter au panier";
-                    addButton.onclick = () => addToPanier(plat);
-                    platElement.appendChild(addButton);
-                    
-                    menuList.appendChild(platElement);
-                });
-            });
-        }
-
-        // Ajouter un plat au panier
-        function addToPanier(plat) {
-            if (!panier.some(item => item.nom === plat.nom)) {
-                panier.push(plat);
-                localStorage.setItem('panier', JSON.stringify(panier));
-                alert(`${plat.nom} ajouté au panier.`);
-                displayPanier();
-            } else {
-                alert("Ce plat est déjà dans votre panier.");
-            }
-        }
-
-        // Supprimer un plat du panier
-        function removeFromPanier(plat) {
-            panier = panier.filter(item => item.nom !== plat.nom);
-            localStorage.setItem('panier', JSON.stringify(panier));
-            alert(`${plat.nom} supprimé du panier.`);
-            displayPanier();
-        }
-
-        // Afficher le panier
-        function displayPanier() {
-            const panierList = document.getElementById('panier-list');
-            panierList.innerHTML = '';
-
-            let total = 0;
-
-            panier.forEach(plat => {
-                const platElement = document.createElement('div');
-                platElement.classList.add('panier-item');
-                platElement.innerHTML = `${plat.nom} - €${plat.prix}`;
-                
-                const removeButton = document.createElement('button');
-                removeButton.textContent = "Supprimer";
-                removeButton.onclick = () => removeFromPanier(plat);
-                platElement.appendChild(removeButton);
-                
-                panierList.appendChild(platElement);
-                total += plat.prix;
-            });
-
-            const totalElement = document.createElement('div');
-            totalElement.innerHTML = `<strong>Total : €${total}</strong>`;
-            panierList.appendChild(totalElement);
-        }
-
-        // Passer la commande
-        function passerCommande() {
-            if (panier.length === 0) {
-                alert("Aucun plat dans le panier.");
+            if (!username || !password) {
+                alert("Veuillez remplir les deux champs.");
                 return;
             }
 
-            const table = prompt("Veuillez entrer votre numéro de table:");
-            if (table) {
-                commandes.push({
-                    utilisateur: currentUser.username,
-                    plats: panier,
-                    table: table,
-                    date: new Date(),
-                    statut: "en livraison"
-                });
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            let userFound = users.find(user => user.username === username && user.password === password);
 
-                localStorage.setItem('commandes', JSON.stringify(commandes));
-                alert(`Commande passée à la table ${table}.`);
-
-                panier = [];
-                localStorage.setItem('panier', JSON.stringify(panier));
-                displayPanier();
-                displayCommandes();
+            if (userFound) {
+                currentUser = username;
+                localStorage.setItem('currentUser', username);
+                closePopup();
+                alert('Connexion réussie!');
+                displayPage('carte');
             } else {
-                alert("Le numéro de table est requis.");
+                alert('Nom d\'utilisateur ou mot de passe incorrect.');
             }
         }
 
-        // Affichage des commandes
-        function displayCommandes() {
-            const commandesList = document.getElementById('commandes-list');
-            commandesList.innerHTML = '';
-
-            commandes.forEach(commande => {
-                const commandeElement = document.createElement('div');
-                commandeElement.classList.add('commande-item');
-                commandeElement.innerHTML = `Commande de ${commande.utilisateur} à la table ${commande.table} le ${commande.date.toLocaleString()} - Statut: ${commande.statut}`;
-                commandesList.appendChild(commandeElement);
+        // Gérer les pages (menu)
+        document.querySelectorAll('.item-menu').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.getAttribute('data-page');
+                displayPage(page);
             });
+        });
+
+        // Affichage des pages
+        function displayPage(page) {
+            document.querySelectorAll('.contenu-page').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(page).classList.add('active');
         }
 
-        // Affichage des plats favoris
-        function displayFavoris() {
-            const favorisList = document.getElementById('favoris-list');
-            favorisList.innerHTML = '';
+        // Initialiser la carte des food trucks avec Leaflet
+        function initMap() {
+            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 14);
 
-            favoris.forEach(plat => {
-                const platElement = document.createElement('div');
-                platElement.classList.add('favori-item');
-                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
-                
-                const removeButton = document.createElement('button');
-                removeButton.textContent = "Supprimer des favoris";
-                removeButton.onclick = () => removeFromFavoris(plat);
-                platElement.appendChild(removeButton);
-                
-                favorisList.appendChild(platElement);
-            });
-        }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-        // Ajouter un plat aux favoris
-        function addToFavoris(plat) {
-            if (!favoris.some(item => item.nom === plat.nom)) {
-                favoris.push(plat);
-                localStorage.setItem('favoris', JSON.stringify(favoris));
-                alert(`${plat.nom} ajouté aux favoris.`);
-                displayFavoris();
-            } else {
-                alert("Ce plat est déjà dans vos favoris.");
+            for (const [truckName, truckData] of Object.entries(foodTrucks)) {
+                L.marker(truckData.position).addTo(map)
+                    .bindPopup(`<b>${truckName}</b><br>Plats disponibles: ${truckData.plats.map(p => p.nom).join(', ')}`);
             }
         }
 
-        // Supprimer un plat des favoris
-        function removeFromFavoris(plat) {
-            favoris = favoris.filter(item => item.nom !== plat.nom);
-            localStorage.setItem('favoris', JSON.stringify(favoris));
-            alert(`${plat.nom} supprimé des favoris.`);
-            displayFavoris();
-        }
-
-        // Initialisation de la carte
-        function initCarte() {
-            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-            Object.keys(foodTrucks).forEach(truckName => {
-                const truck = foodTrucks[truckName];
-                L.marker(truck.position).addTo(map).bindPopup(`<b>${truckName}</b>`);
-            });
-        }
-
-        // Appels initiaux
-        setupNavigation();
-        initCarte();
+        // Ouvrir la popup de connexion/inscription dès le chargement de la page
+        window.onload = () => {
+            openPopup();
+            initMap();
+        };
     </script>
 </body>
 </html>
-
