@@ -117,14 +117,14 @@
             opacity: 0.9;
         }
 
-        .menu-item, .commande-item, .favori-item {
+        .menu-item, .commande-item {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #444;
         }
 
-        .menu-item button, .favori-item button {
+        .menu-item button, .commande-item button {
             background: var(--couleur-primaire);
             color: white;
             border: none;
@@ -132,19 +132,7 @@
             cursor: pointer;
         }
 
-        .menu-item button:hover, .favori-item button:hover {
-            background: var(--couleur-secondaire);
-        }
-
-        .commande-item button {
-            background: var(--couleur-primaire);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .commande-item button:hover {
+        .menu-item button:hover, .commande-item button:hover {
             background: var(--couleur-secondaire);
         }
     </style>
@@ -157,7 +145,6 @@
                 <div class="item-menu" data-page="signup">📝 S'inscrire</div>
                 <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
                 <div class="item-menu" data-page="menu">🍽️ Menu</div>
-                <div class="item-menu" data-page="favoris">💖 Plats favoris</div>
                 <div class="item-menu" data-page="commandes">🛒 Commandes</div>
             </nav>
         </aside>
@@ -186,10 +173,6 @@
                 <h2>Menu des Food Trucks</h2>
                 <div id="menu-list"></div>
                 <button class="bouton" onclick="addCommande()">Passer commande</button>
-            </section>
-            <section id="favoris" class="contenu-page">
-                <h2>Plats favoris</h2>
-                <div id="favoris-list"></div>
             </section>
             <section id="commandes" class="contenu-page">
                 <h2>Commandes</h2>
@@ -222,7 +205,7 @@
         };
 
         let currentUser = null;
-        let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
+        let panier = JSON.parse(localStorage.getItem('panier') || '[]');
         let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
         let commandeEnCours = [];
 
@@ -294,8 +277,8 @@
                     platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
                     
                     const addButton = document.createElement('button');
-                    addButton.textContent = "Ajouter aux favoris";
-                    addButton.onclick = () => addToFavoris(plat);
+                    addButton.textContent = "Ajouter au panier";
+                    addButton.onclick = () => addToPanier(plat);
                     platElement.appendChild(addButton);
                     
                     menuList.appendChild(platElement);
@@ -303,43 +286,15 @@
             });
         }
 
-        // Ajouter un plat aux favoris
-        function addToFavoris(plat) {
-            if (!favoris.some(item => item.nom === plat.nom)) {
-                favoris.push(plat);
-                localStorage.setItem('favoris', JSON.stringify(favoris));
-                alert(`${plat.nom} ajouté aux favoris.`);
-                displayFavoris();
+        // Ajouter un plat au panier
+        function addToPanier(plat) {
+            if (!commandeEnCours.some(item => item.nom === plat.nom)) {
+                commandeEnCours.push(plat);
+                localStorage.setItem('panier', JSON.stringify(commandeEnCours));
+                alert(`${plat.nom} ajouté au panier.`);
             } else {
-                alert("Ce plat est déjà dans vos favoris.");
+                alert("Ce plat est déjà dans votre commande.");
             }
-        }
-
-        // Supprimer un plat des favoris
-        function removeFromFavoris(plat) {
-            favoris = favoris.filter(item => item.nom !== plat.nom);
-            localStorage.setItem('favoris', JSON.stringify(favoris));
-            alert(`${plat.nom} retiré des favoris.`);
-            displayFavoris();
-        }
-
-        // Affichage des plats favoris
-        function displayFavoris() {
-            const favorisList = document.getElementById('favoris-list');
-            favorisList.innerHTML = '';
-
-            favoris.forEach(plat => {
-                const platElement = document.createElement('div');
-                platElement.classList.add('favori-item');
-                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
-                
-                const removeButton = document.createElement('button');
-                removeButton.textContent = "Retirer des favoris";
-                removeButton.onclick = () => removeFromFavoris(plat);
-                platElement.appendChild(removeButton);
-                
-                favorisList.appendChild(platElement);
-            });
         }
 
         // Passer une commande
@@ -361,7 +316,7 @@
                 localStorage.setItem('commandes', JSON.stringify(commandes));
                 alert(`Commande passée avec livraison à la table ${table}.`);
                 commandeEnCours = [];
-                displayCommandes();
+                localStorage.setItem('panier', JSON.stringify(commandeEnCours));
             } else {
                 alert("Le numéro de table est requis.");
             }
@@ -395,10 +350,7 @@
         setupNavigation();
         initCarte();
         displayMenu();
-        displayFavoris();
         displayCommandes();
     </script>
 </body>
 </html>
-
-
