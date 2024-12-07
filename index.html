@@ -185,6 +185,7 @@
             <section id="menu" class="contenu-page">
                 <h2>Menu des Food Trucks</h2>
                 <div id="menu-list"></div>
+                <button class="bouton" onclick="addCommande()">Passer commande</button>
             </section>
             <section id="favoris" class="contenu-page">
                 <h2>Plats favoris</h2>
@@ -222,6 +223,7 @@
         let currentUser = null;
         let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
         let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
+        let commandeEnCours = [];
 
         // Navigation entre pages
         function setupNavigation() {
@@ -290,24 +292,67 @@
                     platElement.classList.add('menu-item');
                     platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
                     const addButton = document.createElement('button');
-                    addButton.textContent = "Ajouter aux favoris";
-                    addButton.onclick = () => addToFavoris(plat);
+                    addButton.textContent = "Ajouter à la commande";
+                    addButton.onclick = () => addToCommande(plat);
                     platElement.appendChild(addButton);
                     menuList.appendChild(platElement);
                 });
             });
         }
 
-        // Ajouter un plat aux favoris
-        function addToFavoris(plat) {
-            if (!favoris.some(favori => favori.nom === plat.nom)) {
-                favoris.push(plat);
-                localStorage.setItem('favoris', JSON.stringify(favoris));
-                alert(`${plat.nom} a été ajouté à vos favoris.`);
-                displayFavoris();
+        // Ajouter un plat à la commande
+        function addToCommande(plat) {
+            if (!commandeEnCours.some(item => item.nom === plat.nom)) {
+                commandeEnCours.push(plat);
+                alert(`${plat.nom} ajouté à votre commande.`);
             } else {
-                alert("Ce plat est déjà dans vos favoris.");
+                alert("Ce plat est déjà dans votre commande.");
             }
+        }
+
+        // Passer une commande et la mettre en livraison
+        function addCommande() {
+            if (commandeEnCours.length === 0) {
+                alert("Aucun plat dans la commande.");
+                return;
+            }
+
+            const livraison = prompt("Voulez-vous que votre commande soit livrée à votre table ? (oui/non)");
+            if (livraison === "oui") {
+                commandes.push({
+                    utilisateur: currentUser.username,
+                    plats: commandeEnCours,
+                    livraison: "en livraison",
+                    date: new Date()
+                });
+                localStorage.setItem('commandes', JSON.stringify(commandes));
+                alert("Commande passée avec livraison à votre table.");
+            } else {
+                commandes.push({
+                    utilisateur: currentUser.username,
+                    plats: commandeEnCours,
+                    livraison: "à emporter",
+                    date: new Date()
+                });
+                localStorage.setItem('commandes', JSON.stringify(commandes));
+                alert("Commande passée pour emporter.");
+            }
+
+            commandeEnCours = [];
+            displayCommandes();
+        }
+
+        // Affichage des commandes
+        function displayCommandes() {
+            const commandesList = document.getElementById('commandes-list');
+            commandesList.innerHTML = '';
+
+            commandes.forEach(commande => {
+                const commandeElement = document.createElement('div');
+                commandeElement.classList.add('commande-item');
+                commandeElement.innerHTML = `Commande de ${commande.utilisateur} le ${commande.date.toLocaleString()} - Livraison: ${commande.livraison}`;
+                commandesList.appendChild(commandeElement);
+            });
         }
 
         // Affichage des plats favoris
@@ -323,39 +368,9 @@
             });
         }
 
-        // Passer une commande
-        function passCommande() {
-            if (favoris.length === 0) {
-                alert("Aucun plat sélectionné !");
-                return;
-            }
-
-            const commande = { utilisateur: currentUser.username, plats: favoris, date: new Date() };
-            commandes.push(commande);
-            localStorage.setItem('commandes', JSON.stringify(commandes));
-            alert("Commande passée avec succès !");
-            favoris = [];
-            localStorage.setItem('favoris', JSON.stringify(favoris));
-            displayFavoris();
-        }
-
-        // Affichage des commandes
-        function displayCommandes() {
-            const commandesList = document.getElementById('commandes-list');
-            commandesList.innerHTML = '';
-
-            commandes.forEach(commande => {
-                const commandeElement = document.createElement('div');
-                commandeElement.classList.add('commande-item');
-                commandeElement.innerHTML = `Commande de ${commande.utilisateur} le ${commande.date.toLocaleString()}`;
-                commandesList.appendChild(commandeElement);
-            });
-        }
-
         // Initialisation de la carte
         function initCarte() {
             const map = L.map('carte-food-trucks').setView([48.8566, 2.3522], 13);
-
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             Object.keys(foodTrucks).forEach(truckName => {
@@ -373,5 +388,4 @@
     </script>
 </body>
 </html>
-
 
