@@ -3,313 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Trucks</title>
+    <title>Food Truck Courbevoie</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         :root {
-            --couleur-fond-principal: #121212;
-            --couleur-primaire: #bb86fc;
-            --couleur-secondaire: #03dac6;
-            --couleur-surface: #1e1e1e;
-            --degradé-principal: linear-gradient(45deg, #bb86fc, #03dac6);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --primary-color: #FF6F61;
+            --secondary-color: #FFAB76;
+            --bg-color: #121212;
+            --text-color: #FFFFFF;
+            --card-bg: #1E1E1E;
+            --hover-bg: #333333;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--couleur-fond-principal);
-            color: white;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
 
-        .conteneur-principal {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-
-        .sidebar {
-            background: var(--couleur-surface);
-            border-radius: 10px;
+        header {
+            background: var(--primary-color);
             padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
         }
 
-        .menu-navigation .item-menu {
-            display: block;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .item-menu:hover,
-        .item-menu.active {
-            background: var(--couleur-primaire);
-            color: black;
-        }
-
-        .contenu-page {
-            display: none;
-        }
-
-        .contenu-page.active {
-            display: block;
-        }
-
-        #carte-food-trucks {
-            height: 400px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .carte-food-truck {
-            background: var(--couleur-surface);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .bouton {
-            background: var(--degradé-principal);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            color: black;
-            cursor: pointer;
-        }
-
-        .bouton:hover {
-            opacity: 0.9;
-        }
-
-        .menu-item, .commande-item, .panier-item, .favori-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #444;
-        }
-
-        .menu-item button, .commande-item button, .panier-item button, .favori-item button {
-            background: var(--couleur-primaire);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .menu-item button:hover, .commande-item button:hover, .panier-item button:hover, .favori-item button:hover {
-            background: var(--couleur-secondaire);
-        }
-
-        /* Popup Style */
-        .popup {
+        nav {
+            width: 200px;
+            height: 100vh;
+            background-color: var(--card-bg);
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin: 20px 0;
+        }
+
+        nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav ul li a:hover {
+            background: var(--hover-bg);
+        }
+
+        main {
+            margin-left: 220px;
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card button {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            color: var(--text-color);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .card button:hover {
+            background: var(--secondary-color);
+        }
+
+        #loginPopup {
             display: flex;
-            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
             justify-content: center;
+            align-items: center;
             z-index: 1000;
         }
 
-        .popup-content {
-            background: var(--couleur-surface);
+        #loginPopup .popup-content {
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 10px;
             width: 300px;
+            text-align: center;
         }
 
-        .popup-content input {
+        #loginPopup input {
             width: 100%;
             padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #444;
-            border-radius: 5px;
-            background-color: var(--couleur-fond-principal);
-            color: white;
-        }
-
-        .popup-content button {
-            background: var(--degradé-principal);
+            margin: 10px 0;
             border: none;
-            padding: 10px;
-            width: 100%;
             border-radius: 5px;
-            color: black;
-            cursor: pointer;
         }
 
-        .popup-content button:hover {
-            opacity: 0.9;
-        }
-
-        .popup .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
+        #loginPopup button {
+            background: var(--primary-color);
             color: white;
-            font-size: 20px;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
         }
 
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="conteneur-principal">
-        <aside class="sidebar">
-            <nav class="menu-navigation">
-                <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
-                <div class="item-menu" data-page="menu">🍽️ Menu</div>
-                <div class="item-menu" data-page="panier">🛒 Panier</div>
-                <div class="item-menu" data-page="favoris">⭐ Plats favoris</div>
-                <div class="item-menu" data-page="commandes">🛍️ Commandes</div>
-            </nav>
-        </aside>
-        <main>
-            <!-- Page de la carte des Food Trucks -->
-            <section id="carte" class="contenu-page">
-                <h2>Carte des Food Trucks</h2>
-                <div id="carte-food-trucks"></div>
-            </section>
 
-            <!-- Page du menu des Food Trucks -->
-            <section id="menu" class="contenu-page">
-                <h2>Menu des Food Trucks</h2>
-                <div id="menu-list"></div>
-            </section>
+<div id="loginPopup">
+    <div class="popup-content">
+        <h2>Connexion</h2>
+        <input type="text" id="username" placeholder="Nom d'utilisateur" />
+        <input type="password" id="password" placeholder="Mot de passe" />
+        <button onclick="login()">Se connecter</button>
+    </div>
+</div>
 
-            <!-- Page du panier -->
-            <section id="panier" class="contenu-page">
-                <h2>Votre Panier</h2>
-                <div id="panier-list"></div>
-                <button class="bouton" onclick="passerCommande()">Passer commande</button>
-            </section>
+<header>Food Truck - Courbevoie</header>
 
-            <!-- Page des plats favoris -->
-            <section id="favoris" class="contenu-page">
-                <h2>Plats Favoris</h2>
-                <div id="favoris-list"></div>
-            </section>
+<nav>
+    <ul>
+        <li><a href="#" onclick="switchSection('map-section')">Carte</a></li>
+        <li><a href="#" onclick="switchSection('favorites-section')">Plats Favoris</a></li>
+        <li><a href="#" onclick="switchSection('cart-section')">Panier</a></li>
+    </ul>
+</nav>
 
-            <!-- Page des commandes -->
-            <section id="commandes" class="contenu-page">
-                <h2>Historique des Commandes</h2>
-                <div id="commandes-list"></div>
-            </section>
-        </main>
+<main>
+    <div id="map-section" class="section active">
+        <h2>Localisation du Food Truck</h2>
+        <div id="map"></div>
     </div>
 
-    <!-- Popup Connexion/Inscription -->
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <span class="close-btn" onclick="closePopup()">×</span>
-            <h2>Se connecter ou s'inscrire</h2>
-            <div class="popup-form">
-                <input type="text" id="username" placeholder="Nom d'utilisateur">
-                <input type="password" id="password" placeholder="Mot de passe">
-                <button onclick="loginOrSignup()">Se connecter / S'inscrire</button>
-            </div>
-        </div>
+    <div id="favorites-section" class="section">
+        <h2>Vos Plats Favoris</h2>
+        <div id="favorites-container"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        // Données Food Trucks (1 seul truck)
-        const foodTrucks = {
-            "Food Truck Courbevoie": {
-                position: [48.8997, 2.3096],
-                plats: [
-                    { nom: 'Burger', type: 'Fast Food', prix: 8 },
-                    { nom: 'Frites', type: 'Accompagnement', prix: 3 },
-                    { nom: 'Pizza', type: 'Pizzeria', prix: 10 },
-                    { nom: 'Tacos', type: 'Mexicain', prix: 7 }
-                ]
-            }
-        };
+    <div id="cart-section" class="section">
+        <h2>Votre Panier</h2>
+        <div id="cart-container"></div>
+    </div>
+</main>
 
-        let currentUser = null;
-        let panier = JSON.parse(localStorage.getItem('panier') || '[]');
-        let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
-        let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([48.8955, 2.2563], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.marker([48.8955, 2.2563]).addTo(map).bindPopup('Food Truck - Courbevoie').openPopup();
 
-        // Ouvrir et fermer le popup
-        function openPopup() {
-            document.getElementById('popup').style.display = 'flex';
+    function switchSection(sectionId) {
+        document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (username && password) {
+            document.getElementById('loginPopup').style.display = 'none';
+        } else {
+            alert('Veuillez remplir tous les champs.');
         }
-
-        function closePopup() {
-            document.getElementById('popup').style.display = 'none';
-        }
-
-        // Fonction de connexion/inscription
-        function loginOrSignup() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (!username || !password) {
-                alert("Veuillez remplir les deux champs.");
-                return;
-            }
-
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            let userFound = users.find(user => user.username === username && user.password === password);
-
-            if (userFound) {
-                currentUser = username;
-                localStorage.setItem('currentUser', username);
-                closePopup();
-                alert('Connexion réussie!');
-                displayPage('carte');
-            } else {
-                alert('Nom d\'utilisateur ou mot de passe incorrect.');
-            }
-        }
-
-        // Gérer les pages (menu)
-        document.querySelectorAll('.item-menu').forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.getAttribute('data-page');
-                displayPage(page);
-            });
-        });
-
-        // Affichage des pages
-        function displayPage(page) {
-            document.querySelectorAll('.contenu-page').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(page).classList.add('active');
-        }
-
-        // Initialiser la carte des food trucks avec Leaflet
-        function initMap() {
-            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 14);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            for (const [truckName, truckData] of Object.entries(foodTrucks)) {
-                L.marker(truckData.position).addTo(map)
-                    .bindPopup(`<b>${truckName}</b><br>Plats disponibles: ${truckData.plats.map(p => p.nom).join(', ')}`);
-            }
-        }
-
-        // Ouvrir la popup de connexion/inscription dès le chargement de la page
-        window.onload = () => {
-            openPopup();
-            initMap();
-        };
-    </script>
+    }
+</script>
 </body>
 </html>
+
+
