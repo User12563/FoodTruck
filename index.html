@@ -116,6 +116,37 @@
         .login-form button:hover, .signup-form button:hover {
             opacity: 0.9;
         }
+
+        .menu-item, .commande-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .menu-item button {
+            background: var(--couleur-primaire);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .menu-item button:hover {
+            background: var(--couleur-secondaire);
+        }
+
+        .commande-item button {
+            background: var(--couleur-primaire);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .commande-item button:hover {
+            background: var(--couleur-secondaire);
+        }
     </style>
 </head>
 <body>
@@ -125,6 +156,9 @@
                 <div class="item-menu" data-page="login">🔑 Se connecter</div>
                 <div class="item-menu" data-page="signup">📝 S'inscrire</div>
                 <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
+                <div class="item-menu" data-page="menu">🍽️ Menu</div>
+                <div class="item-menu" data-page="favoris">💖 Plats favoris</div>
+                <div class="item-menu" data-page="commandes">🛒 Commandes</div>
             </nav>
         </aside>
         <main>
@@ -147,6 +181,18 @@
             <section id="carte" class="contenu-page">
                 <h2>Carte des Food Trucks</h2>
                 <div id="carte-food-trucks"></div>
+            </section>
+            <section id="menu" class="contenu-page">
+                <h2>Menu des Food Trucks</h2>
+                <div id="menu-list"></div>
+            </section>
+            <section id="favoris" class="contenu-page">
+                <h2>Plats favoris</h2>
+                <div id="favoris-list"></div>
+            </section>
+            <section id="commandes" class="contenu-page">
+                <h2>Commandes</h2>
+                <div id="commandes-list"></div>
             </section>
         </main>
     </div>
@@ -174,6 +220,8 @@
         };
 
         let currentUser = null;
+        let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
+        let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
 
         // Navigation entre pages
         function setupNavigation() {
@@ -219,36 +267,109 @@
             const password = document.getElementById('login-password').value;
 
             const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.username === username && u.password === password);
-
+            const user = users.find(user => user.username === username && user.password === password);
             if (user) {
                 currentUser = user;
-                alert("Bienvenue " + currentUser.username + " !");
+                alert("Connexion réussie !");
                 document.getElementById('login-username').value = '';
                 document.getElementById('login-password').value = '';
-                setupNavigation();
-                // Afficher la carte des Food Trucks si connecté
-                afficherCarte();
             } else {
                 alert("Nom d'utilisateur ou mot de passe incorrect.");
             }
         }
 
-        // Afficher la carte des Food Trucks
-        function afficherCarte() {
-            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // Affichage des plats du menu
+        function displayMenu() {
+            const menuList = document.getElementById('menu-list');
+            menuList.innerHTML = '';
 
-            Object.keys(foodTrucks).forEach(truck => {
-                const truckData = foodTrucks[truck];
-                L.marker(truckData.position)
-                    .addTo(map)
-                    .bindPopup(`<b>${truck}</b>`);
+            Object.keys(foodTrucks).forEach(truckName => {
+                const truck = foodTrucks[truckName];
+                truck.plats.forEach(plat => {
+                    const platElement = document.createElement('div');
+                    platElement.classList.add('menu-item');
+                    platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
+                    const addButton = document.createElement('button');
+                    addButton.textContent = "Ajouter aux favoris";
+                    addButton.onclick = () => addToFavoris(plat);
+                    platElement.appendChild(addButton);
+                    menuList.appendChild(platElement);
+                });
             });
         }
 
-        // Initialisation
+        // Ajouter un plat aux favoris
+        function addToFavoris(plat) {
+            if (!favoris.some(favori => favori.nom === plat.nom)) {
+                favoris.push(plat);
+                localStorage.setItem('favoris', JSON.stringify(favoris));
+                alert(`${plat.nom} a été ajouté à vos favoris.`);
+                displayFavoris();
+            } else {
+                alert("Ce plat est déjà dans vos favoris.");
+            }
+        }
+
+        // Affichage des plats favoris
+        function displayFavoris() {
+            const favorisList = document.getElementById('favoris-list');
+            favorisList.innerHTML = '';
+
+            favoris.forEach(plat => {
+                const platElement = document.createElement('div');
+                platElement.classList.add('menu-item');
+                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
+                favorisList.appendChild(platElement);
+            });
+        }
+
+        // Passer une commande
+        function passCommande() {
+            if (favoris.length === 0) {
+                alert("Aucun plat sélectionné !");
+                return;
+            }
+
+            const commande = { utilisateur: currentUser.username, plats: favoris, date: new Date() };
+            commandes.push(commande);
+            localStorage.setItem('commandes', JSON.stringify(commandes));
+            alert("Commande passée avec succès !");
+            favoris = [];
+            localStorage.setItem('favoris', JSON.stringify(favoris));
+            displayFavoris();
+        }
+
+        // Affichage des commandes
+        function displayCommandes() {
+            const commandesList = document.getElementById('commandes-list');
+            commandesList.innerHTML = '';
+
+            commandes.forEach(commande => {
+                const commandeElement = document.createElement('div');
+                commandeElement.classList.add('commande-item');
+                commandeElement.innerHTML = `Commande de ${commande.utilisateur} le ${commande.date.toLocaleString()}`;
+                commandesList.appendChild(commandeElement);
+            });
+        }
+
+        // Initialisation de la carte
+        function initCarte() {
+            const map = L.map('carte-food-trucks').setView([48.8566, 2.3522], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            Object.keys(foodTrucks).forEach(truckName => {
+                const truck = foodTrucks[truckName];
+                L.marker(truck.position).addTo(map).bindPopup(`<b>${truckName}</b>`);
+            });
+        }
+
+        // Appels initiaux
         setupNavigation();
+        initCarte();
+        displayMenu();
+        displayFavoris();
+        displayCommandes();
     </script>
 </body>
 </html>
