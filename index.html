@@ -117,14 +117,14 @@
             opacity: 0.9;
         }
 
-        .menu-item, .commande-item {
+        .menu-item, .commande-item, .panier-item {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #444;
         }
 
-        .menu-item button, .commande-item button {
+        .menu-item button, .commande-item button, .panier-item button {
             background: var(--couleur-primaire);
             color: white;
             border: none;
@@ -132,7 +132,7 @@
             cursor: pointer;
         }
 
-        .menu-item button:hover, .commande-item button:hover {
+        .menu-item button:hover, .commande-item button:hover, .panier-item button:hover {
             background: var(--couleur-secondaire);
         }
     </style>
@@ -145,7 +145,8 @@
                 <div class="item-menu" data-page="signup">📝 S'inscrire</div>
                 <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
                 <div class="item-menu" data-page="menu">🍽️ Menu</div>
-                <div class="item-menu" data-page="commandes">🛒 Commandes</div>
+                <div class="item-menu" data-page="panier">🛒 Panier</div>
+                <div class="item-menu" data-page="commandes">🛍️ Commandes</div>
             </nav>
         </aside>
         <main>
@@ -172,12 +173,15 @@
             <section id="menu" class="contenu-page">
                 <h2>Menu des Food Trucks</h2>
                 <div id="menu-list"></div>
-                <button class="bouton" onclick="addCommande()">Passer commande</button>
+            </section>
+            <section id="panier" class="contenu-page">
+                <h2>Votre Panier</h2>
+                <div id="panier-list"></div>
+                <button class="bouton" onclick="passerCommande()">Passer commande</button>
             </section>
             <section id="commandes" class="contenu-page">
-                <h2>Commandes</h2>
+                <h2>Historique des Commandes</h2>
                 <div id="commandes-list"></div>
-                <button class="bouton" onclick="passerCommande()">Passer commande</button>
             </section>
         </main>
     </div>
@@ -234,16 +238,15 @@
             if (username && password) {
                 const users = JSON.parse(localStorage.getItem('users') || '[]');
                 if (users.some(user => user.username === username)) {
-                    alert("Ce nom d'utilisateur est déjà pris.");
-                } else {
-                    users.push({ username, password });
-                    localStorage.setItem('users', JSON.stringify(users));
-                    alert("Inscription réussie !");
-                    document.getElementById('signup-username').value = '';
-                    document.getElementById('signup-password').value = '';
+                    alert("Nom d'utilisateur déjà pris.");
+                    return;
                 }
+
+                users.push({ username, password });
+                localStorage.setItem('users', JSON.stringify(users));
+                alert("Inscription réussie !");
             } else {
-                alert("Veuillez remplir tous les champs.");
+                alert("Veuillez entrer un nom d'utilisateur et un mot de passe.");
             }
         }
 
@@ -254,11 +257,15 @@
 
             const users = JSON.parse(localStorage.getItem('users') || '[]');
             const user = users.find(user => user.username === username && user.password === password);
+
             if (user) {
                 currentUser = user;
                 alert("Connexion réussie !");
                 document.getElementById('login-username').value = '';
                 document.getElementById('login-password').value = '';
+                displayMenu();
+                displayPanier();
+                displayCommandes();
             } else {
                 alert("Nom d'utilisateur ou mot de passe incorrect.");
             }
@@ -288,19 +295,40 @@
 
         // Ajouter un plat au panier
         function addToPanier(plat) {
-            if (!commandeEnCours.some(item => item.nom === plat.nom)) {
-                commandeEnCours.push(plat);
-                localStorage.setItem('panier', JSON.stringify(commandeEnCours));
+            if (!panier.some(item => item.nom === plat.nom)) {
+                panier.push(plat);
+                localStorage.setItem('panier', JSON.stringify(panier));
                 alert(`${plat.nom} ajouté au panier.`);
+                displayPanier();
             } else {
-                alert("Ce plat est déjà dans votre commande.");
+                alert("Ce plat est déjà dans votre panier.");
             }
         }
 
-        // Passer une commande
+        // Afficher le panier
+        function displayPanier() {
+            const panierList = document.getElementById('panier-list');
+            panierList.innerHTML = '';
+
+            let total = 0;
+
+            panier.forEach(plat => {
+                const platElement = document.createElement('div');
+                platElement.classList.add('panier-item');
+                platElement.innerHTML = `${plat.nom} - €${plat.prix}`;
+                panierList.appendChild(platElement);
+                total += plat.prix;
+            });
+
+            const totalElement = document.createElement('div');
+            totalElement.innerHTML = `<strong>Total : €${total}</strong>`;
+            panierList.appendChild(totalElement);
+        }
+
+        // Passer la commande
         function passerCommande() {
-            if (commandeEnCours.length === 0) {
-                alert("Aucune commande en cours.");
+            if (panier.length === 0) {
+                alert("Aucun plat dans le panier.");
                 return;
             }
 
@@ -308,15 +336,19 @@
             if (table) {
                 commandes.push({
                     utilisateur: currentUser.username,
-                    plats: commandeEnCours,
+                    plats: panier,
                     table: table,
                     date: new Date(),
                     statut: "en livraison"
                 });
+
                 localStorage.setItem('commandes', JSON.stringify(commandes));
-                alert(`Commande passée avec livraison à la table ${table}.`);
-                commandeEnCours = [];
-                localStorage.setItem('panier', JSON.stringify(commandeEnCours));
+                alert(`Commande passée à la table ${table}.`);
+
+                panier = [];
+                localStorage.setItem('panier', JSON.stringify(panier));
+                displayPanier();
+                displayCommandes();
             } else {
                 alert("Le numéro de table est requis.");
             }
@@ -349,8 +381,7 @@
         // Appels initiaux
         setupNavigation();
         initCarte();
-        displayMenu();
-        displayCommandes();
     </script>
 </body>
 </html>
+
