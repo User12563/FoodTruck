@@ -117,14 +117,14 @@
             opacity: 0.9;
         }
 
-        .menu-item, .commande-item, .panier-item {
+        .menu-item, .commande-item, .panier-item, .favori-item {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #444;
         }
 
-        .menu-item button, .commande-item button, .panier-item button {
+        .menu-item button, .commande-item button, .panier-item button, .favori-item button {
             background: var(--couleur-primaire);
             color: white;
             border: none;
@@ -132,7 +132,7 @@
             cursor: pointer;
         }
 
-        .menu-item button:hover, .commande-item button:hover, .panier-item button:hover {
+        .menu-item button:hover, .commande-item button:hover, .panier-item button:hover, .favori-item button:hover {
             background: var(--couleur-secondaire);
         }
     </style>
@@ -146,6 +146,7 @@
                 <div class="item-menu" data-page="carte">📍 Carte des Food Trucks</div>
                 <div class="item-menu" data-page="menu">🍽️ Menu</div>
                 <div class="item-menu" data-page="panier">🛒 Panier</div>
+                <div class="item-menu" data-page="favoris">⭐ Plats favoris</div>
                 <div class="item-menu" data-page="commandes">🛍️ Commandes</div>
             </nav>
         </aside>
@@ -179,6 +180,10 @@
                 <div id="panier-list"></div>
                 <button class="bouton" onclick="passerCommande()">Passer commande</button>
             </section>
+            <section id="favoris" class="contenu-page">
+                <h2>Plats Favoris</h2>
+                <div id="favoris-list"></div>
+            </section>
             <section id="commandes" class="contenu-page">
                 <h2>Historique des Commandes</h2>
                 <div id="commandes-list"></div>
@@ -198,20 +203,13 @@
                     { nom: 'Pizza', type: 'Pizzeria', prix: 10 },
                     { nom: 'Tacos', type: 'Mexicain', prix: 7 }
                 ]
-            },
-            "Food Truck Paris": {
-                position: [48.8566, 2.3522],
-                plats: [
-                    { nom: 'Sushi', type: 'Japonais', prix: 12 },
-                    { nom: 'Tempura', type: 'Japonais', prix: 10 }
-                ]
             }
         };
 
         let currentUser = null;
         let panier = JSON.parse(localStorage.getItem('panier') || '[]');
+        let favoris = JSON.parse(localStorage.getItem('favoris') || '[]');
         let commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
-        let commandeEnCours = [];
 
         // Navigation entre pages
         function setupNavigation() {
@@ -266,6 +264,7 @@
                 displayMenu();
                 displayPanier();
                 displayCommandes();
+                displayFavoris();
             } else {
                 alert("Nom d'utilisateur ou mot de passe incorrect.");
             }
@@ -305,6 +304,14 @@
             }
         }
 
+        // Supprimer un plat du panier
+        function removeFromPanier(plat) {
+            panier = panier.filter(item => item.nom !== plat.nom);
+            localStorage.setItem('panier', JSON.stringify(panier));
+            alert(`${plat.nom} supprimé du panier.`);
+            displayPanier();
+        }
+
         // Afficher le panier
         function displayPanier() {
             const panierList = document.getElementById('panier-list');
@@ -316,6 +323,12 @@
                 const platElement = document.createElement('div');
                 platElement.classList.add('panier-item');
                 platElement.innerHTML = `${plat.nom} - €${plat.prix}`;
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = "Supprimer";
+                removeButton.onclick = () => removeFromPanier(plat);
+                platElement.appendChild(removeButton);
+                
                 panierList.appendChild(platElement);
                 total += plat.prix;
             });
@@ -367,9 +380,48 @@
             });
         }
 
+        // Affichage des plats favoris
+        function displayFavoris() {
+            const favorisList = document.getElementById('favoris-list');
+            favorisList.innerHTML = '';
+
+            favoris.forEach(plat => {
+                const platElement = document.createElement('div');
+                platElement.classList.add('favori-item');
+                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = "Supprimer des favoris";
+                removeButton.onclick = () => removeFromFavoris(plat);
+                platElement.appendChild(removeButton);
+                
+                favorisList.appendChild(platElement);
+            });
+        }
+
+        // Ajouter un plat aux favoris
+        function addToFavoris(plat) {
+            if (!favoris.some(item => item.nom === plat.nom)) {
+                favoris.push(plat);
+                localStorage.setItem('favoris', JSON.stringify(favoris));
+                alert(`${plat.nom} ajouté aux favoris.`);
+                displayFavoris();
+            } else {
+                alert("Ce plat est déjà dans vos favoris.");
+            }
+        }
+
+        // Supprimer un plat des favoris
+        function removeFromFavoris(plat) {
+            favoris = favoris.filter(item => item.nom !== plat.nom);
+            localStorage.setItem('favoris', JSON.stringify(favoris));
+            alert(`${plat.nom} supprimé des favoris.`);
+            displayFavoris();
+        }
+
         // Initialisation de la carte
         function initCarte() {
-            const map = L.map('carte-food-trucks').setView([48.8566, 2.3522], 13);
+            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             Object.keys(foodTrucks).forEach(truckName => {
