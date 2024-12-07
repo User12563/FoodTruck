@@ -117,14 +117,14 @@
             opacity: 0.9;
         }
 
-        .menu-item, .commande-item {
+        .menu-item, .commande-item, .favori-item {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #444;
         }
 
-        .menu-item button {
+        .menu-item button, .favori-item button {
             background: var(--couleur-primaire);
             color: white;
             border: none;
@@ -132,7 +132,7 @@
             cursor: pointer;
         }
 
-        .menu-item button:hover {
+        .menu-item button:hover, .favori-item button:hover {
             background: var(--couleur-secondaire);
         }
 
@@ -194,6 +194,7 @@
             <section id="commandes" class="contenu-page">
                 <h2>Commandes</h2>
                 <div id="commandes-list"></div>
+                <button class="bouton" onclick="passerCommande()">Passer commande</button>
             </section>
         </main>
     </div>
@@ -291,55 +292,79 @@
                     const platElement = document.createElement('div');
                     platElement.classList.add('menu-item');
                     platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
+                    
                     const addButton = document.createElement('button');
-                    addButton.textContent = "Ajouter à la commande";
-                    addButton.onclick = () => addToCommande(plat);
+                    addButton.textContent = "Ajouter aux favoris";
+                    addButton.onclick = () => addToFavoris(plat);
                     platElement.appendChild(addButton);
+                    
                     menuList.appendChild(platElement);
                 });
             });
         }
 
-        // Ajouter un plat à la commande
-        function addToCommande(plat) {
-            if (!commandeEnCours.some(item => item.nom === plat.nom)) {
-                commandeEnCours.push(plat);
-                alert(`${plat.nom} ajouté à votre commande.`);
+        // Ajouter un plat aux favoris
+        function addToFavoris(plat) {
+            if (!favoris.some(item => item.nom === plat.nom)) {
+                favoris.push(plat);
+                localStorage.setItem('favoris', JSON.stringify(favoris));
+                alert(`${plat.nom} ajouté aux favoris.`);
+                displayFavoris();
             } else {
-                alert("Ce plat est déjà dans votre commande.");
+                alert("Ce plat est déjà dans vos favoris.");
             }
         }
 
-        // Passer une commande et la mettre en livraison
-        function addCommande() {
+        // Supprimer un plat des favoris
+        function removeFromFavoris(plat) {
+            favoris = favoris.filter(item => item.nom !== plat.nom);
+            localStorage.setItem('favoris', JSON.stringify(favoris));
+            alert(`${plat.nom} retiré des favoris.`);
+            displayFavoris();
+        }
+
+        // Affichage des plats favoris
+        function displayFavoris() {
+            const favorisList = document.getElementById('favoris-list');
+            favorisList.innerHTML = '';
+
+            favoris.forEach(plat => {
+                const platElement = document.createElement('div');
+                platElement.classList.add('favori-item');
+                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = "Retirer des favoris";
+                removeButton.onclick = () => removeFromFavoris(plat);
+                platElement.appendChild(removeButton);
+                
+                favorisList.appendChild(platElement);
+            });
+        }
+
+        // Passer une commande
+        function passerCommande() {
             if (commandeEnCours.length === 0) {
-                alert("Aucun plat dans la commande.");
+                alert("Aucune commande en cours.");
                 return;
             }
 
-            const livraison = prompt("Voulez-vous que votre commande soit livrée à votre table ? (oui/non)");
-            if (livraison === "oui") {
+            const table = prompt("Veuillez entrer votre numéro de table:");
+            if (table) {
                 commandes.push({
                     utilisateur: currentUser.username,
                     plats: commandeEnCours,
-                    livraison: "en livraison",
-                    date: new Date()
+                    table: table,
+                    date: new Date(),
+                    statut: "en livraison"
                 });
                 localStorage.setItem('commandes', JSON.stringify(commandes));
-                alert("Commande passée avec livraison à votre table.");
+                alert(`Commande passée avec livraison à la table ${table}.`);
+                commandeEnCours = [];
+                displayCommandes();
             } else {
-                commandes.push({
-                    utilisateur: currentUser.username,
-                    plats: commandeEnCours,
-                    livraison: "à emporter",
-                    date: new Date()
-                });
-                localStorage.setItem('commandes', JSON.stringify(commandes));
-                alert("Commande passée pour emporter.");
+                alert("Le numéro de table est requis.");
             }
-
-            commandeEnCours = [];
-            displayCommandes();
         }
 
         // Affichage des commandes
@@ -350,21 +375,8 @@
             commandes.forEach(commande => {
                 const commandeElement = document.createElement('div');
                 commandeElement.classList.add('commande-item');
-                commandeElement.innerHTML = `Commande de ${commande.utilisateur} le ${commande.date.toLocaleString()} - Livraison: ${commande.livraison}`;
+                commandeElement.innerHTML = `Commande de ${commande.utilisateur} à la table ${commande.table} le ${commande.date.toLocaleString()} - Statut: ${commande.statut}`;
                 commandesList.appendChild(commandeElement);
-            });
-        }
-
-        // Affichage des plats favoris
-        function displayFavoris() {
-            const favorisList = document.getElementById('favoris-list');
-            favorisList.innerHTML = '';
-
-            favoris.forEach(plat => {
-                const platElement = document.createElement('div');
-                platElement.classList.add('menu-item');
-                platElement.innerHTML = `${plat.nom} (${plat.type}) - €${plat.prix}`;
-                favorisList.appendChild(platElement);
             });
         }
 
@@ -388,4 +400,5 @@
     </script>
 </body>
 </html>
+
 
